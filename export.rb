@@ -17,41 +17,74 @@ connection_descriptor = {
 DB = Sequel.odbc('euler') #connect(connection_descriptor)
 puts DB["select db_name() as dbname"].first[:dbname]
 
-
 def profile_descriptor(pid)
     ret = {}
 
-    p = DB["SELECT name, headline FROM [profile] WHERE [id]='#{pid}'"].first
+    # get profile fields
+    p = DB["SELECT name, headline, location, industry, id_company_from_headline FROM [profile] WHERE [id]='#{pid}'"].first
+
+    # extract the company name from the headline
+    cname = nil
+    if p[:headline] =~ / at /
+        cname = p[:headline].split(/ at /).last
+        p[:headline] = p[:headline].split(/ at /).first
+    end
+
+    # add profile fields to the descriptor
     ret[:name] = p[:name]
     ret[:headline] = p[:headline]
+    ret[:location] = p[:location]
+    ret[:industry] = p[:industry]
 
+    # if the profile is not linked to a company record
+    ret[:company] = nil
+    ret[:id_company_from_headline] = nil
+    if !ret[:id_company_from_headline].nil?
+        cid = ret[:id_company_from_headline]
+        ret[:id_company_from_headline] = cid
+        c = DB["SELECT name, website FROM [company] WHERE [id]='#{cid}'"].first
+        ret[:company] = {
+            :name => c[:name],
+            :url => c[:website],
+        }
+    elsif !cname.nil?
+        ret[:company] = {
+            :name => cname,
+            :url => nil,
+        }
+    end 
+
+    # iterate data
+    datas = []
     DB["
-        SELECT name, 
-        FROM [append] 
-        WHERE export_end_time IS NULL
+        SELECT [type], [email]
+        FROM [append] WITH (NOLOCK)
+        WHERE id_profile='#{pid}'
     "].all { |row|
-        :name => 'Leandro Sardi',
-        :position => 'Founder and CEO',
-        :company => {
-            :name => "ConnectionSphere",
-            :url => "https://connectionsphere.com",
-        },
-        :industry => "Internet",
-        :location => "Argentina",
-        :datas => [
-            {
-                :type => 10,
-                :value => "+54 9 11 5555-5555",
-            },
-            {
-                :type => 20,
-                :value => "support@expandedventure.com",
-            },
-        ],
+        datas << {
+            :type => row[:type],
+            :value => row[:email],
+        }
+    }
+    ret[:datas] = datas
+
+    # return
+    ret
 end # def profile_descriptor
 
-DB["SELECT TOP 1 id, id_profile FROM [append] WITH (NOLOCK) WHERE export_end_time IS NULL"].all { |row|
-    print "#{row[:id]}... "
-    
+DB["SELECT TOP 100 id as aid, id_profile as pid FROM [append] WITH (NOLOCK) WHERE isnull(type,20) in (10,20) and export_end_time IS NULL"].all { |row|
+    aid = row[:aid]
+    pid = row[:pid]
+
+    print "#{row[:pid]}... "
+    h = profile_descriptor(pid)
     puts 'done'
+
+    puts h[:id_company_from_headline].to_s
+    puts h[:company].to_s
+    puts 
+
+    #
+    GC.start
+    DB.disconnect
 }
