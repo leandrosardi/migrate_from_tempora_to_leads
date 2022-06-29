@@ -13,7 +13,6 @@ connection_descriptor = {
     :timeout => 6,
 }  
 
-
 DB = Sequel.odbc('euler') #connect(connection_descriptor)
 puts DB["select db_name() as dbname"].first[:dbname]
 
@@ -32,7 +31,7 @@ def profile_descriptor(pid)
 
     # add profile fields to the descriptor
     ret[:name] = p[:name]
-    ret[:headline] = p[:headline]
+    ret[:position] = p[:headline]
     ret[:location] = p[:location]
     ret[:industry] = p[:industry]
 
@@ -62,7 +61,7 @@ def profile_descriptor(pid)
         WHERE id_profile='#{pid}'
     "].all { |row|
         datas << {
-            :type => row[:type],
+            :type => row[:type].to_i,
             :value => row[:email],
         }
     }
@@ -75,14 +74,27 @@ end # def profile_descriptor
 DB["SELECT TOP 100 id as aid, id_profile as pid FROM [append] WITH (NOLOCK) WHERE isnull(type,20) in (10,20) and export_end_time IS NULL"].all { |row|
     aid = row[:aid]
     pid = row[:pid]
-
-    print "#{row[:pid]}... "
-    h = profile_descriptor(pid)
+    params = profile_descriptor(pid)
+    print "#{row[:pid]} - #{params[:name]}... "
+    #puts "cid: "+params[:id_company_from_headline].to_s
+    #puts "position: "+params[:position].to_s
+    #puts "company: "+params[:company].to_s
+    #puts
+    #puts params.to_s 
+    #puts
+    params[:api_key] = '4db9d88c-dee9-4b5a-8d36-134d38e9f763'
+    begin
+        url = 'https://connectionsphere.com/api1.0/leads/merge.json'
+        res = BlackStack::Netting::call_post(url, params)
+        parsed = JSON.parse(res.body)
+        raise parsed['status'] if parsed['status']!='success'
+        puts parsed.to_s
+    rescue Errno::ECONNREFUSED => e
+        raise "Errno::ECONNREFUSED:" + e.message
+    rescue => e2
+        raise "Exception:" + e2.message
+    end
     puts 'done'
-
-    puts h[:id_company_from_headline].to_s
-    puts h[:company].to_s
-    puts 
 
     #
     GC.start
