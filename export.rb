@@ -66,14 +66,28 @@ def profile_descriptor(pid)
     # convert to utf-8 compatible string
     ret[:name].to_s.encode!("utf-8", :undef=>:replace, :invalid=>:replace, :replace=>'?')
     ret[:position].to_s.encode!("utf-8", :undef=>:replace, :invalid=>:replace, :replace=>'?')
-    ret[:company][:name].to_s.encode!("utf-8", :undef=>:replace, :invalid=>:replace, :replace=>'?')
+    if !ret[:company].nil?
+        ret[:company][:name].to_s.encode!("utf-8", :undef=>:replace, :invalid=>:replace, :replace=>'?')
+    end
+    ret[:location].to_s.encode!("utf-8", :undef=>:replace, :invalid=>:replace, :replace=>'?')
 
     # iterate data
     datas = []
     DB["
-        SELECT [type], [email]
+        SELECT ISNULL([type], 20) AS [type], [email]
         FROM [append] WITH (NOLOCK)
         WHERE id_profile='#{pid}'
+        AND ISNULL([type], 20) IN (10,20,90)
+        AND (
+            ISNULL([type], 20) <> 90
+            OR
+            ( 
+                -- these are patterns of sales navigator URLs, who are not public profiles URLs
+                len(email)<>63 
+                and
+                email not like '%NAME_SEARCH%'
+            )
+        )
     "].all { |row|
         datas << {
             :type => row[:type].to_i,
