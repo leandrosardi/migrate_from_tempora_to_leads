@@ -1,6 +1,6 @@
 # migrate_from_tempora_to_leads
 
-Script to migrate leads information from our old (deprecated) tempora database to our new MySaaS/Leads product.
+Script to migrate leads information from our old (deprecated) **Tempora** database to our new **MySaaS/Leads** product.
 
 Install and run this code in the Windows server, where you have the SQLServer with the database to export.
 
