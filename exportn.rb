@@ -68,7 +68,7 @@ while n > 0
     rescue => e2
         #raise "Exception:" + e2.to_console
         print 'error'
-        DB.execute("UPDATE [append] SET export_error_description='#{e.to_console.to_sql}', export_success=0 WHERE [id] in (#{idsin})")
+        DB.execute("UPDATE [append] SET export_error_description='#{e2.to_console.to_sql}', export_success=0 WHERE [id] in (#{idsin})")
     end
     puts 'done'
 
