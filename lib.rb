@@ -68,16 +68,35 @@ def profile_descriptor(pid)
             OR
             ( 
                 -- these are patterns of sales navigator URLs, who are not public profiles URLs
+                email like '%linkedin.com/in/%'
+                and
                 len(email)<>63 
                 and
                 email not like '%NAME_SEARCH%'
             )
         )
+        AND (
+            ISNULL([type], 20) <> 20
+            OR
+            ( 
+                -- emails with wrong format
+                email not like 'http%'
+                and
+                email like '%@%'
+            )
+        )
+
     "].all { |row|
-        datas << {
-            'type' => row[:type].to_i,
-            'value' => row[:email],
-        }
+        # remove emails with wrong format
+        # remove linkedin URLs with wrong format
+        if (
+            row[:type].to_i==10 || ( row[:type].to_i==20 && row[:email].to_s.email? ) || ( row[:type].to_i==90 && row[:email].to_s =~ /((https?:\/\/)?(www\.)?linkedin\.com\/in\/)(([-A-Za-z0-9\%](\/?))+$)/ )
+        )
+            datas << {
+                'type' => row[:type].to_i,
+                'value' => row[:email],
+            }
+        end
     }
     ret['datas'] = datas
 
