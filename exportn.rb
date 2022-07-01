@@ -9,7 +9,7 @@ API_KEY = 'e5facc62-5ad0-4902-8830-b3c020be03e4'
 n = 1
 while n > 0
     rows = DB["
-        SELECT TOP 1 id as aid, id_profile as pid 
+        SELECT TOP 100 id as aid, id_profile as pid 
         FROM [append] WITH (NOLOCK) 
         WHERE type is not null 
         AND isnull(type,20) in (20) 
@@ -39,8 +39,6 @@ while n > 0
     params = {}
     params['api_key'] = API_KEY
     params['leads'] = leads
-puts 
-puts params.to_s
     begin
         print '.'
         url = 'https://connectionsphere.com/api1.0/leads/merge_many.json'
