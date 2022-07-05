@@ -4,8 +4,6 @@ require 'tiny_tds'
 require 'sequel'
 require_relative './lib'
 
-API_KEY = 'e5facc62-5ad0-4902-8830-b3c020be03e4'
-
 n = 1
 while n > 0
     rows = DB["

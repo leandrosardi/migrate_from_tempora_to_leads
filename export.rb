@@ -19,7 +19,7 @@ DB["
 
     print '.'
     DB.execute("UPDATE [append] SET export_start_time=GETDATE() WHERE [id]='#{aid}'")
-    params['api_key'] = 'e5facc62-5ad0-4902-8830-b3c020be03e4'
+    params['api_key'] = API_KEY
     #puts "cid: "+params['id_company_from_headline'].to_s
     #puts "position: "+params['position'].to_s
     puts

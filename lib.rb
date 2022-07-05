@@ -1,3 +1,5 @@
+require './apikey.rb'
+
 connection_descriptor = {
     :adapter => 'tinytds',
     :dataserver => 'localhost', # IP or hostname
