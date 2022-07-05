@@ -4,8 +4,10 @@ require 'tiny_tds'
 require 'sequel'
 require_relative './lib'
 
+k = 0
 n = 1
 while n > 0
+    k += 1 
     rows = DB["
         SELECT TOP 100 id as aid, id_profile as pid 
         FROM [append] WITH (NOLOCK) 
@@ -15,7 +17,7 @@ while n > 0
     "].all
     n = rows.size
 
-    print "#{n.to_s} batch... "
+    print "#{k.to_s}. #{n.to_s} batch... "
 
     print '.'
     idsin = "'"+rows.map { |row| row[:aid] }.join("', '")+"'"
